@@ -82,4 +82,14 @@ class PostController extends Controller
 
         return PostResource::make($post->load('author'));
     }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Post $post)
+    {
+        $post->delete();
+
+        return response()->noContent();
+    }
 }

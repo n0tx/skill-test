@@ -14,6 +14,7 @@ Route::post('/posts', [PostController::class, 'store'])->middleware('auth')->nam
 Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
 Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->middleware('auth', 'can:update,post')->name('posts.edit');
 Route::put('/posts/{post}', [PostController::class, 'update'])->middleware('auth', 'can:update,post')->name('posts.update');
+Route::delete('/posts/{post}', [PostController::class, 'destroy'])->middleware('auth', 'can:delete,post')->name('posts.destroy');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {

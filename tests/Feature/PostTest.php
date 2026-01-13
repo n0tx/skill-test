@@ -239,4 +239,36 @@ class PostTest extends TestCase
             'slug' => 'updated-awesome-title',
         ]);
     }
+
+    public function test_guests_cannot_delete_a_post()
+    {
+        $user = User::factory()->create();
+        $post = Post::factory()->for($user, 'author')->create();
+
+        $response = $this->deleteJson('/posts/'.$post->id);
+
+        $response->assertUnauthorized();
+    }
+
+    public function test_users_cannot_delete_other_users_posts()
+    {
+        $postOwner = User::factory()->create();
+        $post = Post::factory()->for($postOwner, 'author')->create();
+        $anotherUser = User::factory()->create();
+
+        $response = $this->actingAs($anotherUser)->deleteJson('/posts/'.$post->id);
+
+        $response->assertStatus(403);
+    }
+
+    public function test_post_author_can_delete_post()
+    {
+        $user = User::factory()->create();
+        $post = Post::factory()->for($user, 'author')->create();
+
+        $response = $this->actingAs($user)->deleteJson('/posts/'.$post->id);
+
+        $response->assertStatus(204);
+        $this->assertDatabaseMissing('posts', ['id' => $post->id]);
+    }
 }
