@@ -12,6 +12,7 @@ Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
 Route::get('/posts/create', [PostController::class, 'create'])->middleware('auth')->name('posts.create');
 Route::post('/posts', [PostController::class, 'store'])->middleware('auth')->name('posts.store');
 Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
+Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->middleware('auth', 'can:update,post')->name('posts.edit');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {

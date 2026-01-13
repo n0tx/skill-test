@@ -62,4 +62,12 @@ class PostController extends Controller
 
         return PostResource::make($post->load('author'));
     }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Post $post)
+    {
+        return 'posts.edit';
+    }
 }

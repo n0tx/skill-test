@@ -152,4 +152,38 @@ class PostTest extends TestCase
                 ],
             ]);
     }
+
+    public function test_guests_cannot_access_edit_post_page()
+    {
+        // A user must be created to satisfy the user_id foreign key constraint
+        $user = User::factory()->create();
+        $post = Post::factory()->for($user, 'author')->create();
+
+        $response = $this->get('/posts/'.$post->id.'/edit');
+
+        $response->assertRedirect('/login');
+    }
+
+    public function test_users_cannot_edit_other_users_posts()
+    {
+        $postOwner = User::factory()->create();
+        $post = Post::factory()->for($postOwner, 'author')->create();
+
+        $anotherUser = User::factory()->create();
+
+        $response = $this->actingAs($anotherUser)->get('/posts/'.$post->id.'/edit');
+
+        $response->assertStatus(403);
+    }
+
+    public function test_post_author_can_access_edit_post_page()
+    {
+        $user = User::factory()->create();
+        $post = Post::factory()->for($user, 'author')->create();
+
+        $response = $this->actingAs($user)->get('/posts/'.$post->id.'/edit');
+
+        $response->assertStatus(200);
+        $response->assertSee('posts.edit');
+    }
 }
