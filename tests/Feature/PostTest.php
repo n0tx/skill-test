@@ -70,4 +70,47 @@ class PostTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('posts.create');
     }
+
+    public function test_guests_cannot_store_a_post()
+    {
+        $response = $this->post('/posts', [
+            'title' => 'New Post by Guest',
+            'body' => 'This should not be saved.',
+        ]);
+
+        $response->assertRedirect('/login');
+        $this->assertDatabaseCount('posts', 0);
+    }
+
+    public function test_store_post_validation_fails_for_missing_title()
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->postJson('/posts', [
+            'body' => 'Body without a title',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('title');
+    }
+
+    public function test_authenticated_user_can_store_a_post()
+    {
+        $user = User::factory()->create();
+        $postData = [
+            'title' => 'My First Awesome Post',
+            'body' => 'This is the content of my very first post.',
+        ];
+
+        $response = $this->actingAs($user)->postJson('/posts', $postData);
+
+        $response->assertStatus(201)
+            ->assertJsonFragment(['title' => 'My First Awesome Post']);
+
+        $this->assertDatabaseHas('posts', [
+            'title' => 'My First Awesome Post',
+            'user_id' => $user->id,
+            'slug' => 'my-first-awesome-post',
+        ]);
+    }
 }
