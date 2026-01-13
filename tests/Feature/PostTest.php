@@ -53,4 +53,21 @@ class PostTest extends TestCase
                 'meta',
             ]);
     }
+
+    public function test_guests_cannot_access_create_post_page()
+    {
+        $response = $this->get('/posts/create');
+
+        $response->assertRedirect('/login');
+    }
+
+    public function test_authenticated_users_can_access_create_post_page()
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/posts/create');
+
+        $response->assertStatus(200);
+        $response->assertSee('posts.create');
+    }
 }

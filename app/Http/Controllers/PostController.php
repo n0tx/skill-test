@@ -20,4 +20,12 @@ class PostController extends Controller
 
         return PostResource::collection($posts);
     }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        return 'posts.create';
+    }
 }
