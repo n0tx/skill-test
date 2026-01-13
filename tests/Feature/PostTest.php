@@ -186,4 +186,57 @@ class PostTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('posts.edit');
     }
+
+    public function test_guests_cannot_update_a_post()
+    {
+        // A user must be created to satisfy the user_id foreign key constraint
+        $user = User::factory()->create();
+        $post = Post::factory()->for($user, 'author')->create();
+        $response = $this->putJson('/posts/'.$post->id, ['title' => 'Updated Title', 'body' => 'Updated Body']);
+        $response->assertUnauthorized(); // Expecting 401 as it's a JSON request
+    }
+
+    public function test_users_cannot_update_other_users_posts()
+    {
+        $postOwner = User::factory()->create();
+        $post = Post::factory()->for($postOwner, 'author')->create();
+        $anotherUser = User::factory()->create();
+
+        $response = $this->actingAs($anotherUser)->putJson('/posts/'.$post->id, ['title' => 'Updated Title', 'body' => 'Updated Body']);
+
+        $response->assertStatus(403);
+    }
+
+    public function test_update_post_validation_fails_for_missing_title()
+    {
+        $user = User::factory()->create();
+        $post = Post::factory()->for($user, 'author')->create();
+
+        $response = $this->actingAs($user)->putJson('/posts/'.$post->id, ['body' => 'Body without a title']);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('title');
+    }
+
+    public function test_post_author_can_update_post()
+    {
+        $user = User::factory()->create();
+        $post = Post::factory()->for($user, 'author')->create([
+            'title' => 'Original Title',
+            'body' => 'Original Body',
+        ]);
+
+        $updateData = ['title' => 'Updated Awesome Title', 'body' => 'Updated awesome body.'];
+
+        $response = $this->actingAs($user)->putJson('/posts/'.$post->id, $updateData);
+
+        $response->assertStatus(200)
+            ->assertJsonFragment(['title' => 'Updated Awesome Title']);
+
+        $this->assertDatabaseHas('posts', [
+            'id' => $post->id,
+            'title' => 'Updated Awesome Title',
+            'slug' => 'updated-awesome-title',
+        ]);
+    }
 }
