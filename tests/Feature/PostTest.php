@@ -113,4 +113,43 @@ class PostTest extends TestCase
             'slug' => 'my-first-awesome-post',
         ]);
     }
+
+    public function test_show_returns_404_for_draft_post()
+    {
+        $user = User::factory()->create();
+        $draftPost = Post::factory()->for($user, 'author')->draft()->create();
+
+        $response = $this->getJson('/posts/'.$draftPost->id);
+
+        $response->assertStatus(404);
+    }
+
+    public function test_show_returns_404_for_scheduled_post()
+    {
+        $user = User::factory()->create();
+        $scheduledPost = Post::factory()->for($user, 'author')->scheduled()->create();
+
+        $response = $this->getJson('/posts/'.$scheduledPost->id);
+
+        $response->assertStatus(404);
+    }
+
+    public function test_show_returns_published_post()
+    {
+        $user = User::factory()->create();
+        $publishedPost = Post::factory()->for($user, 'author')->published()->create();
+
+        $response = $this->getJson('/posts/'.$publishedPost->id);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'data' => [
+                    'id' => $publishedPost->id,
+                    'title' => $publishedPost->title,
+                    'author' => [
+                        'id' => $user->id,
+                    ],
+                ],
+            ]);
+    }
 }

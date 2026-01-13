@@ -49,4 +49,17 @@ class PostController extends Controller
 
         return PostResource::make($post->load('author'))->response()->setStatusCode(201);
     }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Post $post): PostResource
+    {
+        // Abort if the post is a draft or scheduled for the future
+        if ($post->is_draft || $post->published_at->isFuture()) {
+            abort(404);
+        }
+
+        return PostResource::make($post->load('author'));
+    }
 }
