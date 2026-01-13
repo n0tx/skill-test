@@ -18,7 +18,8 @@ return new class extends Migration
                 ->constrained()
                 ->cascadeOnDelete();
             $table->string('title');
-            $table->text('content');
+            $table->string('slug')->unique();
+            $table->text('body');
             $table->boolean('is_draft')->default(true);
             $table->dateTime('published_at')->nullable();
             $table->datetimes();
